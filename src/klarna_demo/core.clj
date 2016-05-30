@@ -20,18 +20,22 @@
 (defn- get-data
   ([uri] (get-data uri nil))
   ([uri params]
-   (-> (str base-uri uri (make-query params))
-       (http/get {:headers {:token token}})
-       :body
-       (json/parse-string true))))
+   (let [{:keys [metadata results]} (-> (str base-uri uri (make-query params))
+                                        (http/get {:headers {:token token}})
+                                        :body
+                                        (json/parse-string true))
+         {:keys [count limit offset]} (:resultset metadata)]
+     (println count limit offset)
+     (if (> count (+ offset limit))
+       (concat results (get-data uri (merge params {:offset (+ offset limit)})))
+       results))))
 
 (defn location-categories []
   (get-data "/locationcategories"))
 
 (defn locations [type]
   (get-data "/locations"
-            {:locationcategoryid (location-types type)
-             :limit 5}))
+            {:locationcategoryid (location-types type)}))
 
 (defn -main
   "I don't do a whole lot ... yet."
