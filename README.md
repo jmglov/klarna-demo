@@ -23,10 +23,23 @@ FIXME: listing of options this app accepts.
 1. Create git repo and make initial commit
 1. Open `src/klarna_demo/core.clj`
 1. How do we make an HTTP call? [clj-http](https://github.com/dakrone/clj-http)
+   * `[clj-http "2.2.0"]`
 1. How do we decode JSON? [cheshire](https://github.com/dakrone/cheshire)
+   * `[cheshire "5.6.1"]`
 1. Start a REPL
 1. Get location categories
 1. Turn them into JSON
+1. Get locations
+1. Locations by category
+1. Extract `get-data`
+1. Return `:results` from `get-data`
+1. Paging in `get-data`
+1. Get weather
+1. How do we handle no results in `get-data`?
+1. Schema!
+   * `[prismatic-schema "1.1.1"]`
+1. Extract `(s/defn get-json ...)`
+1. `(s/set-fn-validation! true)`
 
 ## License
 
