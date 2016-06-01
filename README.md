@@ -34,12 +34,13 @@ FIXME: listing of options this app accepts.
 1. Extract `get-data`
 1. Return `:results` from `get-data`
 1. Paging in `get-data`
-1. Get weather
+1. Get weather (metric units!)
 1. How do we handle no results in `get-data`?
 1. Schema!
    * `[prismatic-schema "1.1.1"]`
 1. Extract `(s/defn get-json ...)`
 1. `(s/set-fn-validation! true)`
+1. Group weather data by station
 
 ## License
 

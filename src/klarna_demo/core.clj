@@ -46,12 +46,19 @@
              :limit 1000}))
 
 (defn weather [id date]
-  (get-data "/data"
-            {:datasetid "GHCND"
-             :locationid id
-             :startdate date
-             :enddate date
-             :units "metric"}))
+  (->> (get-data "/data"
+                 {:datasetid "GHCND"
+                  :locationid id
+                  :startdate date
+                  :enddate date
+                  :units "metric"})
+       (group-by :station)
+       (map (fn [[_ data]]
+              (->> data
+                   (reduce (fn [acc m]
+                             (let [type (-> (:datatype m) string/lower-case keyword)]
+                               (merge acc {type (:value m)})))
+                           {}))))))
 
 (defn -main
   "I don't do a whole lot ... yet."
