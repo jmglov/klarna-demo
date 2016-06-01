@@ -27,7 +27,7 @@
       :body
       (json/parse-string true)))
 
-(defn ^:private get-data
+(defn- get-data
   ([uri] (get-data uri nil))
   ([uri params]
    (let [{:keys [metadata results]} (get-json uri params)
@@ -50,7 +50,8 @@
             {:datasetid "GHCND"
              :locationid id
              :startdate date
-             :enddate date}))
+             :enddate date
+             :units "metric"}))
 
 (defn -main
   "I don't do a whole lot ... yet."
