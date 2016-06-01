@@ -1,13 +1,16 @@
 (ns klarna-demo.core
   (:require [cheshire.core :as json]
             [clj-http.client :as http]
+            [clj-time.core :as t]
+            [clj-time.format :as f]
+            [clj-time.periodic :as p]
             [clojure.string :as string]
             [schema.core :as s])
   (:gen-class))
 
 (def ^:private base-uri "http://www.ncdc.noaa.gov/cdo-web/api/v2")
 (def ^:private token "tvFfqDXOZiffOpXZMzuXSJufcBBaDbxL")
-
+(def ^:private date-formatter (f/formatters :year-month-day))
 (def ^:private location-types
   {::city "CITY"
    ::country "CNTRY"})
@@ -72,14 +75,24 @@
     (when code
       (str "CITY:" code))))
 
-(defn daily-weather [country date]
-  (let [prefix (country-prefix country)
-        city-ids (->> (locations ::city)
-                      (filter #(string/starts-with? (:id %) prefix))
-                      (map :id))]
-    (->> city-ids
-         (map (fn [id] [id (weather id date)]))
-         (into {}))))
+(defn daily-weather
+  ([country date]
+   (let [prefix (country-prefix country)
+         city-ids (->> (locations ::city)
+                       (filter #(string/starts-with? (:id %) prefix))
+                       (map :id))]
+     (->> city-ids
+          (map (fn [id] [id (weather id date)]))
+          (into {}))))
+  ([country start-date end-date]
+   (let [start-dt (f/parse date-formatter start-date)
+         end-dt (f/parse date-formatter end-date)]
+     (->> (p/periodic-seq start-dt (t/days 1))
+          (take-while #(t/before? % end-dt))
+          (map (fn [dt]
+                 (let [date (f/unparse date-formatter dt)]
+                   [date (daily-weather country date)])))
+          (into {})))))
 
 (defn -main
   "I don't do a whole lot ... yet."

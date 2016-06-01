@@ -41,6 +41,7 @@ FIXME: listing of options this app accepts.
 1. Extract `(s/defn get-json ...)`
 1. `(s/set-fn-validation! true)`
 1. Group weather data by station
+1. Dates
 
 ## License
 
