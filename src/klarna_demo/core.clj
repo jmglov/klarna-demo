@@ -94,6 +94,18 @@
                    [date (daily-weather country date)])))
           (into {})))))
 
+(defn write-data
+  ([filename data]
+   (write-data pr-str filename data))
+  ([f filename data]
+   (spit filename (f data))))
+
+(defn read-data
+  ([filename]
+   (read-data read-string filename))
+  ([f filename]
+   (f (slurp filename))))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
