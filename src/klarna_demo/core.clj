@@ -45,6 +45,10 @@
             {:locationcategoryid (location-types type)
              :limit 1000}))
 
+(defn- ->summary [acc m]
+  (let [type (-> (:datatype m) string/lower-case keyword)]
+    (merge acc {type (:value m)})))
+
 (defn weather [id date]
   (->> (get-data "/data"
                  {:datasetid "GHCND"
@@ -53,12 +57,27 @@
                   :enddate date
                   :units "metric"})
        (group-by :station)
-       (map (fn [[_ data]]
-              (->> data
-                   (reduce (fn [acc m]
-                             (let [type (-> (:datatype m) string/lower-case keyword)]
-                               (merge acc {type (:value m)})))
-                           {}))))))
+       (map (fn [[_ data]] (reduce ->summary {} data)))))
+
+(defn- country-prefix [country]
+  (let [id (->> (locations ::country)
+                (filter #(= country (:name %)))
+                first
+                :id)
+        code (some-> id
+                     (string/split #":")
+                     second)]
+    (when code
+      (str "CITY:" code))))
+
+(defn daily-weather [country date]
+  (let [prefix (country-prefix country)
+        city-ids (->> (locations ::city)
+                      (filter #(string/starts-with? (:id %) prefix))
+                      (map :id))]
+    (->> city-ids
+         (map (fn [id] [id (weather id date)]))
+         (into {}))))
 
 (defn -main
   "I don't do a whole lot ... yet."
