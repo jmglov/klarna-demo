@@ -27,7 +27,7 @@
       :body
       (json/parse-string true)))
 
-(defn- get-data
+(defn- get-data-no-caching
   ([uri] (get-data uri nil))
   ([uri params]
    (let [{:keys [metadata results]} (get-json uri params)
@@ -36,6 +36,8 @@
      (if (> count (+ offset limit))
        (concat results (get-data uri (merge params {:offset (+ offset limit)})))
        results))))
+
+(def ^:private get-data (memoize get-data-no-caching))
 
 (defn location-categories []
   (get-data "/locationcategories"))
