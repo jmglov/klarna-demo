@@ -118,7 +118,7 @@
 (defn -main
   [cmd start-date end-date filename & [data-format]]
   (let [cmd (keyword cmd)
-        data-format (-> (or "edn") keyword)]
+        data-format (-> data-format (or "edn") keyword)]
     (case cmd
       :input
       (->> filename
