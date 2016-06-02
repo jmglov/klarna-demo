@@ -39,13 +39,14 @@
       (json/parse-string true)))
 
 (defn- get-data-no-caching
-  ([uri] (get-data uri nil))
+  ([uri] (get-data-no-caching uri nil))
   ([uri params]
    (let [{:keys [metadata results]} (get-json uri params)
          {:keys [count limit offset]} (:resultset metadata)]
      (println count limit offset)
      (if (> count (+ offset limit))
-       (concat results (get-data uri (merge params {:offset (+ offset limit)})))
+       (concat results
+               (get-data-no-caching uri (merge params {:offset (+ offset limit)})))
        results))))
 
 (def ^:private get-data (memoize get-data-no-caching))
