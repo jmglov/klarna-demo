@@ -43,7 +43,6 @@
   ([uri params]
    (let [{:keys [metadata results]} (get-json uri params)
          {:keys [count limit offset]} (:resultset metadata)]
-     (println count limit offset)
      (if (> count (+ offset limit))
        (concat results
                (get-data-no-caching uri (merge params {:offset (+ offset limit)})))
@@ -127,6 +126,10 @@
            (into {})
            ((get-in data-formatters [:output data-format]))
            println)
+
+      :output
+      (->> (daily-weather "Sweden" start-date end-date)
+           (write-data (get-in data-formatters [:output data-format]) filename))
 
       (binding [*out* *err*]
         (println "Invalid command! Expecting 'input' or 'output'")))))
