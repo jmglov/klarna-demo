@@ -5,6 +5,7 @@
             [clj-time.format :as f]
             [clj-time.periodic :as p]
             [clojure.string :as string]
+            [clojure.tools.cli :as cli]
             [schema.core :as s])
   (:gen-class))
 
@@ -114,22 +115,35 @@
         interval (t/interval start-ts end-ts)]
     (t/within? interval ts)))
 
+(def ^:private cli-options
+  [["-c" "--country COUNTRY" "country name"
+    :default "Sweden"]
+   ["-f" "--format" "data format"
+    :default :edn
+    :parse-fn keyword
+    :validate [#(contains? #{:edn :json} %)]]
+   ["-h" "--help"]])
+
 (defn -main
-  [cmd start-date end-date filename & [data-format]]
-  (let [cmd (keyword cmd)
-        data-format (-> data-format (or "edn") keyword)]
-    (case cmd
-      :input
-      (->> filename
-           (read-data (get-in data-formatters [:input data-format]))
-           (filter (fn [[date _]] (date-between? date start-date end-date)))
-           (into {})
-           ((get-in data-formatters [:output data-format]))
-           println)
+  [& args]
+  (let [opts (cli/parse-opts args cli-options)
+        {:keys [country format help]} (:options opts)
+        [cmd start-date end-date filename] (:arguments opts)
+        _ (println (pr-str [cmd start-date end-date filename country format]))]
+    (if help
+      (println (:summary opts))
+      (case (keyword cmd)
+        :input
+        (->> filename
+             (read-data (get-in data-formatters [:input format]))
+             (filter (fn [[date _]] (date-between? date start-date end-date)))
+             (into {})
+             ((get-in data-formatters [:output format]))
+             println)
 
-      :output
-      (->> (daily-weather "Sweden" start-date end-date)
-           (write-data (get-in data-formatters [:output data-format]) filename))
+        :output
+        (->> (daily-weather country start-date end-date)
+             (write-data (get-in data-formatters [:output format]) filename))
 
-      (binding [*out* *err*]
-        (println "Invalid command! Expecting 'input' or 'output'")))))
+        (binding [*out* *err*]
+          (println "Invalid command! Expecting 'input' or 'output'"))))))
