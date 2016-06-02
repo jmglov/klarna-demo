@@ -10,10 +10,18 @@
 
 (def ^:private base-uri "http://www.ncdc.noaa.gov/cdo-web/api/v2")
 (def ^:private token "tvFfqDXOZiffOpXZMzuXSJufcBBaDbxL")
+
 (def ^:private date-formatter (f/formatters :year-month-day))
+
 (def ^:private location-types
   {::city "CITY"
    ::country "CNTRY"})
+
+(def ^:private data-formatters
+  {:input {:edn read-string
+           :json json/parse-string}
+   :output {:edn pr-str
+            :json json/generate-string}})
 
 (defn- make-query [params]
   (some->> params
@@ -94,19 +102,30 @@
                    [date (daily-weather country date)])))
           (into {})))))
 
-(defn write-data
-  ([filename data]
-   (write-data pr-str filename data))
-  ([f filename data]
-   (spit filename (f data))))
+(defn write-data [f filename data]
+  (spit filename (f data)))
 
-(defn read-data
-  ([filename]
-   (read-data read-string filename))
-  ([f filename]
-   (f (slurp filename))))
+(defn read-data [f filename]
+  (f (slurp filename)))
+
+(defn- date-between? [date start-date end-date]
+  (let [[ts start-ts end-ts] (->> [date start-date end-date]
+                                  (map #(f/parse date-formatter %)))
+        interval (t/interval start-ts end-ts)]
+    (t/within? interval ts)))
 
 (defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
+  [cmd start-date end-date filename & [data-format]]
+  (let [cmd (keyword cmd)
+        data-format (-> (or "edn") keyword)]
+    (case cmd
+      :input
+      (->> filename
+           (read-data (get-in data-formatters [:input data-format]))
+           (filter (fn [[date _]] (date-between? date start-date end-date)))
+           (into {})
+           ((get-in data-formatters [:output data-format]))
+           println)
+
+      (binding [*out* *err*]
+        (println "Invalid command! Expecting 'input' or 'output'")))))
